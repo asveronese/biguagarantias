@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 const getBaseURL = () => {
-  return 'http://192.168.16.63:3000';
+  return 'http://192.168.15.9:3000';
 };
 
 const BASE_URL = getBaseURL();
