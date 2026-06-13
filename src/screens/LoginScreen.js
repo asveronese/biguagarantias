@@ -1,68 +1,119 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { api } from '../services/api';
+
+const logo = require('../assets/logo.png');
+
 export default function LoginScreen({ navigation }) {
   const [cnpj, setCnpj] = useState('50539279000154');
   const [senha, setSenha] = useState('garantia');
   const [loading, setLoading] = useState(false);
+
   const handleLogin = async () => {
     if (!cnpj || !senha) {
-      Alert.alert('Atenção', 'Preencha CNPJ e senha');
+      Alert.alert('Erro', 'Preencha CNPJ e senha');
       return;
     }
     setLoading(true);
     try {
       const data = await api.login(cnpj, senha);
-      if (data.success) {
-        navigation.replace('Home', { cnpj, nome: data.nome || 'Usuário', codigo: data.codigo });
+      if (data && data.nome) {
+        navigation.replace('Home', { nome: data.nome, cnpj: cnpj, codigo: data.codigo });
       } else {
-        Alert.alert('Erro', 'CNPJ ou senha inválidos');
+        Alert.alert('Erro', 'Usuário ou senha inválidos');
       }
     } catch (error) {
-      Alert.alert('Erro', error.message || 'Falha na conexão com o servidor');
+      Alert.alert('Erro', 'Falha ao conectar ao servidor');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bigua Garantias</Text>
-      <Text style={styles.subtitle}>Sistema de Garantias</Text>
-      <View style={styles.form}>
-        <Text style={styles.label}>CNPJ</Text>
+      <View style={styles.topBar}>
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.topBarText}>Controle de Garantias</Text>
+      </View>
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Login</Text>
         <TextInput
           style={styles.input}
+          placeholder="CNPJ"
           value={cnpj}
           onChangeText={setCnpj}
-          placeholder="Digite o CNPJ"
           keyboardType="numeric"
-          autoCapitalize="none"
         />
-        <Text style={styles.label}>Senha</Text>
         <TextInput
           style={styles.input}
+          placeholder="Senha"
           value={senha}
           onChangeText={setSenha}
-          placeholder="Digite a senha"
           secureTextEntry
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
+        {loading ? (
+          <ActivityIndicator size="large" color="#0047AB" style={{ marginTop: 20 }} />
+        ) : (
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Entrar</Text>
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0047AB', padding: 20 },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 5 },
-  subtitle: { fontSize: 16, color: '#FFFFFF', marginBottom: 40, opacity: 0.8 },
-  form: { width: '100%', backgroundColor: '#FFFFFF', borderRadius: 12, padding: 20, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 5 },
-  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 15 },
-  button: { backgroundColor: '#0047AB', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
-  buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  topBar: {
+    backgroundColor: '#0047AB',
+    paddingVertical: 15,
+    paddingTop: 50,
+    alignItems: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 8,
+    borderRadius: 100,
+  },
+  topBarText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  formContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 30,
+    marginTop: 30,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0047AB',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#0047AB',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

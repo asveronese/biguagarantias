@@ -71,7 +71,11 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/garantias', async (req, res) => {
   try {
     const rows = await executeQuery(
-      'SELECT PROTOCOLO, PRODUTO, TIPO, DEFEITO, STATUS, DATA_ABERTURA FROM GARANTIAS_APP WHERE CNPJ = ? ORDER BY DATA_ABERTURA DESC',
+	  `SELECT g.ID, g.PROTOCOLO, g.PRODUTO, p.DESCRICAO, g.TIPO, g.DEFEITO, g.STATUS, g.DATA_ABERTURA
+       FROM GARANTIAS_APP g
+       LEFT JOIN CEPRODUTOS p ON g.PRODUTO = p.PRODUTO
+       WHERE g.CNPJ = ?
+       ORDER BY g.ID DESC`,
       [req.query.cnpj]
     );
     res.json(rows);

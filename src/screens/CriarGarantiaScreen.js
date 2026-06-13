@@ -6,7 +6,7 @@ const { cnpj, codigo } = route.params;
 const [listas, setListas] = useState({ Tipo: [], Defeito: [], Envio: [], Suporte: [] });
 const [produtoBusca, setProdutoBusca] = useState('');
 const [sugestoes, setSugestoes] = useState([]);
-const [form, setForm] = useState({ produto: '', tipo: '', defeito: '', envio: '', suporte: '', nfe: '', obs: '' });
+const [form, setForm] = useState({ produto: '', tipo: '', defeito: '', envio: '', suporte: '', nfe: '', obs: '', solicitante: '', fone: '', email: '' });
 const [modal, setModal] = useState({ show: false, campo: '', opcoes: [] });
 useEffect(() => {
 fetch(API + '/listas')
@@ -45,9 +45,9 @@ nfe: form.nfe,
 obs: form.obs,
 qte: 1,
 codigo: codigo,
-solicitante: '',
-fone: '',
-email: ''
+solicitante: form.solicitante,
+fone: form.fone,
+email: form.email
 })
 });
 if (r.ok) {
@@ -141,6 +141,30 @@ setSugestoes([]);
 </Text>
 </TouchableOpacity>
 {form.nfe ? <Text style={styles.selecionado}>NF-e: {form.nfe}</Text> : null}
+<Text style={styles.label}>Solicitante</Text>
+<TextInput
+style={styles.input}
+value={form.solicitante}
+onChangeText={(t) => setForm({...form, solicitante: t})}
+placeholder="Nome do solicitante"
+/>
+<Text style={styles.label}>Telefone</Text>
+<TextInput
+style={styles.input}
+value={form.fone}
+onChangeText={(t) => setForm({...form, fone: t})}
+placeholder="Telefone para contato"
+keyboardType="phone-pad"
+/>
+<Text style={styles.label}>E-mail</Text>
+<TextInput
+style={styles.input}
+value={form.email}
+onChangeText={(t) => setForm({...form, email: t})}
+placeholder="E-mail para contato"
+keyboardType="email-address"
+autoCapitalize="none"
+/>
 <Text style={styles.label}>Observações</Text>
 <TextInput
 style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
