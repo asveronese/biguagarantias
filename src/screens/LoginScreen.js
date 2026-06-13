@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { api } from '../services/api';
-
 export default function LoginScreen({ navigation }) {
   const [cnpj, setCnpj] = useState('50539279000154');
   const [senha, setSenha] = useState('garantia');
   const [loading, setLoading] = useState(false);
-
   const handleLogin = async () => {
     if (!cnpj || !senha) {
       Alert.alert('Atenção', 'Preencha CNPJ e senha');
@@ -16,7 +14,7 @@ export default function LoginScreen({ navigation }) {
     try {
       const data = await api.login(cnpj, senha);
       if (data.success) {
-        navigation.replace('Home', { cnpj, nome: data.nome || 'Usuário' });
+        navigation.replace('Home', { cnpj, nome: data.nome || 'Usuário', codigo: data.codigo });
       } else {
         Alert.alert('Erro', 'CNPJ ou senha inválidos');
       }
@@ -25,12 +23,10 @@ export default function LoginScreen({ navigation }) {
     }
     setLoading(false);
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bigua Garantias</Text>
       <Text style={styles.subtitle}>Sistema de Garantias</Text>
-
       <View style={styles.form}>
         <Text style={styles.label}>CNPJ</Text>
         <TextInput
@@ -41,7 +37,6 @@ export default function LoginScreen({ navigation }) {
           keyboardType="numeric"
           autoCapitalize="none"
         />
-
         <Text style={styles.label}>Senha</Text>
         <TextInput
           style={styles.input}
@@ -50,7 +45,6 @@ export default function LoginScreen({ navigation }) {
           placeholder="Digite a senha"
           secureTextEntry
         />
-
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -62,7 +56,6 @@ export default function LoginScreen({ navigation }) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0047AB', padding: 20 },
   title: { fontSize: 32, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 5 },

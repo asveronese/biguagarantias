@@ -2,12 +2,10 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
-
 export default function HomeScreen({ route, navigation }) {
-  const { nome, cnpj } = route.params || {};
+  const { nome, cnpj, codigo } = route.params || {};
   const [garantias, setGarantias] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fetchGarantias = useCallback(async () => {
     try {
       setLoading(true);
@@ -19,13 +17,11 @@ export default function HomeScreen({ route, navigation }) {
       setLoading(false);
     }
   }, [cnpj]);
-
   useFocusEffect(
     useCallback(() => {
       fetchGarantias();
     }, [fetchGarantias])
   );
-
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'pendente': return '#FF8C00';
@@ -33,7 +29,6 @@ export default function HomeScreen({ route, navigation }) {
       default: return '#6B7280';
     }
   };
-
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{item.PRODUTO}</Text>
@@ -44,14 +39,12 @@ export default function HomeScreen({ route, navigation }) {
       </View>
     </View>
   );
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Olá, {nome}</Text>
         <Text style={styles.cnpj}>CNPJ: {cnpj}</Text>
       </View>
-
       {loading ? (
         <ActivityIndicator size="large" color="#0047AB" style={styles.loader} />
       ) : (
@@ -63,17 +56,15 @@ export default function HomeScreen({ route, navigation }) {
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma garantia encontrada</Text>}
         />
       )}
-
-      <TouchableOpacity 
-        style={styles.fab} 
-        onPress={() => navigation.navigate('CriarGarantia', { cnpj })}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('CriarGarantia', { cnpj, codigo })}
       >
         <Text style={styles.fabText}>Nova Garantia</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA', padding: 20 },
   header: { marginBottom: 20, marginTop: 40 },

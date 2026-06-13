@@ -5,12 +5,10 @@ const Firebird = require('node-firebird');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 const dbOptions = {
   host: process.env.DB_HOST || '192.168.1.3',
   port: parseInt(process.env.DB_PORT || '3050'),
@@ -18,7 +16,6 @@ const dbOptions = {
   user: process.env.DB_USER || 'SYSDBA',
   password: process.env.DB_PASSWORD || 'EPROM0304'
 };
-
 const executeQuery = (query, params = []) => {
   return new Promise((resolve, reject) => {
     Firebird.attach(dbOptions, (err, db) => {
@@ -31,7 +28,6 @@ const executeQuery = (query, params = []) => {
     });
   });
 };
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = 'uploads/';
@@ -43,30 +39,28 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
-
 app.post('/api/login', async (req, res) => {
   const { cnpj, senha } = req.body;
   try {
     const cnpjLimpo = (cnpj || '').replace(/[^\d]/g, '');
-    
     if (senha === 'garantia') {
       const rows = await executeQuery(
-        `SELECT NOME, NUM_DOCTO1 FROM CADASTRO 
+        `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
          WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ?`,
         [cnpjLimpo]
       );
       if (rows.length > 0) {
-        return res.json({ success: true, nome: rows[0].NOME, cnpj });
+        return res.json({ success: true, nome: rows[0].NOME, cnpj, codigo: rows[0].CODIGO });
       }
-      return res.json({ success: true, nome: 'Usuário', cnpj });
+      return res.json({ success: true, nome: 'Usuário', cnpj, codigo: 1 });
     } else {
       const rows = await executeQuery(
-        `SELECT NOME, NUM_DOCTO1 FROM CADASTRO 
+        `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
          WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ? AND SENHA = ?`,
         [cnpjLimpo, senha]
       );
       if (rows.length > 0) {
-        return res.json({ success: true, nome: rows[0].NOME, cnpj });
+        return res.json({ success: true, nome: rows[0].NOME, cnpj, codigo: rows[0].CODIGO });
       }
       return res.json({ success: false });
     }
@@ -74,7 +68,6 @@ app.post('/api/login', async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
-
 app.get('/api/garantias', async (req, res) => {
   try {
     const rows = await executeQuery(
@@ -86,16 +79,14 @@ app.get('/api/garantias', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 app.post('/api/garantias', async (req, res) => {
   try {
     const idRes = await executeQuery('SELECT MAX(ID) as MAXID FROM GARANTIAS_APP');
     const newId = (idRes[0].MAXID || 0) + 1;
     const protocolo = 'G-' + Date.now();
     const { cnpj, codigo, solicitante, fone, email, qte, produto, tipo, defeito, obs, suporte, nfe, envio } = req.body;
-    
     await executeQuery(
-      `INSERT INTO GARANTIAS_APP (ID, CNPJ, CODIGO, SOLICITANTE, FONE, EMAIL, QTE, PRODUTO, TIPO, DEFEITO, OBS, SUPORTE, PROTOCOLO, NFE, ENVIO, STATUS, DATA_ABERTURA, DATA_ATUALIZACAO) 
+      `INSERT INTO GARANTIAS_APP (ID, CNPJ, CODIGO, SOLICITANTE, FONE, EMAIL, QTE, PRODUTO, TIPO, DEFEITO, OBS, SUPORTE, PROTOCOLO, NFE, ENVIO, STATUS, DATA_ABERTURA, DATA_ATUALIZACAO)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [newId, cnpj, codigo, solicitante, fone, email, qte, produto, tipo, defeito, obs, suporte, protocolo, nfe, envio, 'Pendente', new Date(), new Date()]
     );
@@ -104,20 +95,18 @@ app.post('/api/garantias', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 app.get('/api/produtos', async (req, res) => {
   try {
     const busca = '%' + (req.query.busca || '') + '%';
-	const rows = await executeQuery(
-	  'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE UPPER(DESCRICAO) LIKE UPPER(?) OR PRODUTO LIKE ? ORDER BY DESCRICAO', 
-	  [busca, busca]
-	); 
+        const rows = await executeQuery(
+          'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE UPPER(DESCRICAO) LIKE UPPER(?) OR PRODUTO LIKE ? ORDER BY DESCRICAO',
+          [busca, busca]
+        );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 app.get('/api/listas', (req, res) => {
   res.json({
     Tipo: ['Devolução de Novo', 'Devolução com Defeito', 'Remessa de Garantia'],
@@ -138,11 +127,10 @@ app.get('/api/listas', (req, res) => {
     Suporte: ['Sim', 'Não']
   });
 });
-
 app.get('/api/nfs/:codigo/:produto', async (req, res) => {
   try {
-    const sql = `select filial||'-'||serie||'-'||documento as nfe, 
-                 'dt:'||substring(data from 9 for 2)||'/'||substring(data from 6 for 2)||'/'||substring(data from 1 for 4)||'-qt:'||cast(qte-qteg as varchar(10)) as descricao 
+    const sql = `select filial||'-'||serie||'-'||documento as nfe,
+                 'dt:'||substring(data from 9 for 2)||'/'||substring(data from 6 for 2)||'/'||substring(data from 1 for 4)||'-qt:'||cast(qte-qteg as varchar(10)) as descricao
                  from sp_garantia_nfs(?, ?)`;
     const rows = await executeQuery(sql, [req.params.codigo, req.params.produto]);
     res.json(rows);
@@ -150,10 +138,8 @@ app.get('/api/nfs/:codigo/:produto', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 app.post('/api/upload', upload.single('imagem'), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, error: 'Nenhuma imagem enviada' });
   res.json({ success: true, caminho: req.file.path });
 });
-
 app.listen(3000, () => console.log('Server running on port 3000'));
