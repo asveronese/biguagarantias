@@ -108,10 +108,10 @@ app.post('/api/garantias', async (req, res) => {
 app.get('/api/produtos', async (req, res) => {
   try {
     const busca = '%' + (req.query.busca || '') + '%';
-    const rows = await executeQuery(
-      'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE DESCRICAO LIKE ? ORDER BY DESCRICAO',
-      [busca]
-    );
+	const rows = await executeQuery(
+	  'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE UPPER(DESCRICAO) LIKE UPPER(?) OR PRODUTO LIKE ? ORDER BY DESCRICAO', 
+	  [busca, busca]
+	); 
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
