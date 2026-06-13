@@ -39,7 +39,21 @@ export default function CriarGarantiaScreen({ route, navigation }) {
       const r = await fetch(API + '/garantias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cnpj: cnpj, produto: form.produto, tipo: form.tipo, defeito: form.defeito, envio: form.envio, suporte: form.suporte, nfe: form.nfe, obs: form.obs, qte: 1, codigo: 1, solicitante: '', fone: '', email: '' })
+        body: JSON.stringify({ 
+          cnpj: cnpj, 
+          produto: form.produto, 
+          tipo: form.tipo, 
+          defeito: form.defeito, 
+          envio: form.envio, 
+          suporte: form.suporte, 
+          nfe: form.nfe, 
+          obs: form.obs,
+          qte: 1,
+          codigo: 1,
+          solicitante: '',
+          fone: '',
+          email: ''
+        })
       });
       if (r.ok) {
         Alert.alert('Sucesso', 'Garantia criada!');
@@ -57,64 +71,101 @@ export default function CriarGarantiaScreen({ route, navigation }) {
     setModal({ show: true, campo: campo.toLowerCase(), opcoes: listas[campoOriginal] || [] });
   };
 
+  const selecionarOpcao = (opcao) => {
+    setForm({ ...form, [modal.campo]: opcao });
+    setModal({ show: false, campo: '', opcoes: [] });
+  };
+
   return (
     <ScrollView style={styles.container}>
+      <TouchableOpacity style={styles.btnVoltar} onPress={() => navigation.goBack()}>
+        <Text style={styles.btnVoltarText}>← Voltar</Text>
+      </TouchableOpacity>
+
       <Text style={styles.label}>Produto *</Text>
-      <TextInput style={styles.input} value={produtoBusca} onChangeText={buscarProduto} placeholder="Digite para buscar..." />
+      <TextInput 
+        style={styles.input} 
+        value={produtoBusca} 
+        onChangeText={buscarProduto} 
+        placeholder="Digite para buscar..." 
+      />
       {sugestoes.map(item => (
-        <TouchableOpacity key={item.PRODUTO} style={styles.sugestao} onPress={() => {
-          setForm({...form, produto: item.PRODUTO});
-          setProdutoBusca(item.DESCRICAO);
-          setSugestoes([]);
-        }}>
-          <Text style={styles.sugestaoText}>{item.DESCRICAO}</Text>
+        <TouchableOpacity 
+          key={item.PRODUTO} 
+          style={styles.sugestao} 
+          onPress={() => {
+            setForm({...form, produto: item.PRODUTO});
+            setProdutoBusca(item.DESCRICAO);
+            setSugestoes([]);
+          }}
+        >
+          <Text style={styles.sugestaoText}>{item.DESCRICAO} ({item.PRODUTO})</Text>
         </TouchableOpacity>
       ))}
-      {form.produto ? <Text style={styles.selecionado}>Codigo: {form.produto}</Text> : null}
+      {form.produto ? <Text style={styles.selecionado}>Código: {form.produto}</Text> : null}
 
       <Text style={styles.label}>Tipo *</Text>
-      <TouchableOpacity style={styles.input} onPress={() => abrirModal('Tipo')}>
-        <Text>{form.tipo || 'Selecione...'}</Text>
+      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('tipo')}>
+        <Text style={form.tipo ? styles.selectText : styles.selectPlaceholder}>
+          {form.tipo || 'Selecione...'}
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.label}>Defeito *</Text>
-      <TouchableOpacity style={styles.input} onPress={() => abrirModal('Defeito')}>
-        <Text>{form.defeito || 'Selecione...'}</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.label}>Suporte</Text>
-      <TouchableOpacity style={styles.input} onPress={() => abrirModal('Suporte')}>
-        <Text>{form.suporte || 'Selecione...'}</Text>
+      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('defeito')}>
+        <Text style={form.defeito ? styles.selectText : styles.selectPlaceholder}>
+          {form.defeito || 'Selecione...'}
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.label}>Envio</Text>
-      <TouchableOpacity style={styles.input} onPress={() => abrirModal('Envio')}>
-        <Text>{form.envio || 'Selecione...'}</Text>
+      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('envio')}>
+        <Text style={form.envio ? styles.selectText : styles.selectPlaceholder}>
+          {form.envio || 'Selecione...'}
+        </Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>NFE</Text>
-      <TextInput style={styles.input} value={form.nfe} onChangeText={v => setForm({...form, nfe: v})} placeholder="NFe..." />
+      <Text style={styles.label}>Suporte</Text>
+      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('suporte')}>
+        <Text style={form.suporte ? styles.selectText : styles.selectPlaceholder}>
+          {form.suporte || 'Selecione...'}
+        </Text>
+      </TouchableOpacity>
 
-      <Text style={styles.label}>Observacao</Text>
-      <TextInput style={[styles.input, {height: 80}]} multiline value={form.obs} onChangeText={v => setForm({...form, obs: v})} placeholder="Obs..." />
+      <Text style={styles.label}>NF-e</Text>
+      <TextInput 
+        style={styles.input} 
+        value={form.nfe} 
+        onChangeText={(t) => setForm({...form, nfe: t})} 
+        placeholder="Número da NF-e" 
+      />
+
+      <Text style={styles.label}>Observações</Text>
+      <TextInput 
+        style={[styles.input, { height: 80, textAlignVertical: 'top' }]} 
+        value={form.obs} 
+        onChangeText={(t) => setForm({...form, obs: t})} 
+        placeholder="Observações..." 
+        multiline 
+      />
 
       <TouchableOpacity style={styles.btnSalvar} onPress={salvar}>
-        <Text style={styles.btnText}>SALVAR</Text>
+        <Text style={styles.btnText}>Salvar Garantia</Text>
       </TouchableOpacity>
 
-      <Modal visible={modal.show} transparent animationType="slide">
+      <Modal visible={modal.show} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitulo}>Selecione {modal.campo}</Text>
             <FlatList
               data={modal.opcoes}
-              keyExtractor={(item, i) => i.toString()}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.modalItem} onPress={() => {
-                  setForm({...form, [modal.campo]: item});
-                  setModal({ show: false, campo: '', opcoes: [] });
-                }}>
-                  <Text>{item}</Text>
+                <TouchableOpacity 
+                  style={styles.modalItem} 
+                  onPress={() => selecionarOpcao(item)}
+                >
+                  <Text style={styles.modalItemText}>{item}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -135,11 +186,28 @@ const styles = StyleSheet.create({
   sugestao: { padding: 12, backgroundColor: '#f0f0f0', borderBottomWidth: 1, borderColor: '#ddd' },
   sugestaoText: { fontSize: 14 },
   selecionado: { color: '#007AFF', fontWeight: 'bold', marginTop: 5 },
+  selectBtn: { borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 12, backgroundColor: '#f9f9f9' },
+  selectText: { fontSize: 15, color: '#333' },
+  selectPlaceholder: { fontSize: 15, color: '#999' },
   btnSalvar: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 30, marginBottom: 40 },
   btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   modalBg: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: { margin: 20, backgroundColor: '#fff', borderRadius: 10, padding: 20, maxHeight: '70%' },
   modalTitulo: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#007AFF' },
   modalItem: { padding: 15, borderBottomWidth: 1, borderColor: '#eee' },
-  btnFechar: { backgroundColor: '#999', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 15 }
+  modalItemText: { fontSize: 15 },
+  btnFechar: { backgroundColor: '#999', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 15 },
+  btnVoltar: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  btnVoltarText: {
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
 });
