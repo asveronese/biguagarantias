@@ -1,4 +1,10 @@
-const BASE_URL = 'https://strenuous-approve-cold.ngrok-free.dev';
+import { Platform } from 'react-native';
+
+const getBaseURL = () => {
+  return 'http://192.168.16.63:3000';
+};
+
+const BASE_URL = getBaseURL();
 
 export { BASE_URL };
 
@@ -14,10 +20,9 @@ export const api = {
     return data;
   },
 
-  async listarGarantias(cnpj = null, status = null) {
+  async listarGarantias(cnpj = null) {
     let url = `${BASE_URL}/api/garantias?`;
-    if (cnpj) url += `cnpj=${cnpj}&`;
-    if (status) url += `status=${status}`;
+    if (cnpj) url += `cnpj=${cnpj}`;
     const response = await fetch(url);
     return response.json();
   },
@@ -31,5 +36,9 @@ export const api = {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao criar garantia');
     return data;
+  },
+
+  getFotoUrl(id, numero) {
+    return `${BASE_URL}/api/garantias/${id}/foto/${numero}`;
   },
 };
