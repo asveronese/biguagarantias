@@ -1,10 +1,6 @@
-import { Platform } from 'react-native';
+const BASE_URL = 'https://strenuous-approve-cold.ngrok-free.dev';
 
-const getBaseURL = () => {
-  return 'https://strenuous-approve-cold.ngrok-free.dev';
-};
-
-const BASE_URL = getBaseURL();
+export { BASE_URL };
 
 export const api = {
   async login(cnpj, senha) {
@@ -29,14 +25,11 @@ export const api = {
   async criarGarantia(formData) {
     const response = await fetch(`${BASE_URL}/api/garantias`, {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Erro ao criar garantia');
     return data;
-  },
-
-  getFotoUrl(id, numero) {
-    return `${BASE_URL}/api/garantias/${id}/foto/${numero}`;
   },
 };

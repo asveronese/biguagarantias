@@ -1,68 +1,92 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { api } from '../services/api';
 
 export default function HomeScreen({ route, navigation }) {
-  const { nome, cnpj } = route.params;
+  const { nome, cnpj } = route.params || {};
   const [garantias, setGarantias] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchGarantias = async () => {
-    setLoading(true);
+  const fetchGarantias = useCallback(async () => {
     try {
-      const res = await fetch('http://192.168.1.3:3000/api/garantias?cnpj=' + cnpj);
-      const data = await res.json();
-      setGarantias(data);
-    } catch (e) {
-      console.log('Erro:', e);
+      setLoading(true);
+      const data = await api.listarGarantias(cnpj);
+      setGarantias(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar garantias:', error);
     } finally {
       setLoading(false);
     }
+  }, [cnpj]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGarantias();
+    }, [fetchGarantias])
+  );
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pendente': return '#FF8C00';
+      case 'concluído': return '#16A34A';
+      default: return '#6B7280';
+    }
   };
 
-  useFocusEffect(useCallback(() => { fetchGarantias(); }, [cnpj]));
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{item.PRODUTO}</Text>
+      <Text style={styles.cardText}>Data: {item.DATA_ABERTURA}</Text>
+      <Text style={styles.cardText}>Tipo: {item.TIPO}</Text>
+      <View style={[styles.badge, { backgroundColor: getStatusColor(item.STATUS) }]}>
+        <Text style={styles.badgeText}>{item.STATUS}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.nomeCliente}>{nome}</Text>
-        <Text style={styles.cnpjCliente}>CNPJ: {cnpj}</Text>
+        <Text style={styles.welcome}>Olá, {nome}</Text>
+        <Text style={styles.cnpj}>CNPJ: {cnpj}</Text>
       </View>
-      <TouchableOpacity style={styles.btnNova} onPress={() => navigation.navigate('CriarGarantia', { cnpj }) }>
-        <Text style={styles.btnText}>NOVA GARANTIA</Text>
-      </TouchableOpacity>
+
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#0047AB" style={styles.loader} />
       ) : (
         <FlatList
           data={garantias}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.label}>Protocolo: <Text style={styles.value}>{item.PROTOCOLO}</Text></Text>
-              <Text style={styles.label}>Produto: <Text style={styles.value}>{item.PRODUTO}</Text></Text>
-              <Text style={styles.label}>Tipo: <Text style={styles.value}>{item.TIPO}</Text></Text>
-              <Text style={styles.label}>Defeito: <Text style={styles.value}>{item.DEFEITO}</Text></Text>
-              <Text style={styles.label}>Status: <Text style={styles.value}>{item.STATUS}</Text></Text>
-              <Text style={styles.label}>Data: <Text style={styles.value}>{item.DATA_ABERTURA}</Text></Text>
-            </View>
-          )}
-          ListEmptyComponent={<Text style={styles.empty}>Nenhuma garantia encontrada</Text>}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma garantia encontrada</Text>}
         />
       )}
+
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={() => navigation.navigate('CriarGarantia', { cnpj })}
+      >
+        <Text style={styles.fabText}>Nova Garantia</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f5f5f5' },
-  header: { marginBottom: 20, padding: 15, backgroundColor: '#fff', borderRadius: 10, elevation: 2 },
-  nomeCliente: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
-  cnpjCliente: { fontSize: 14, color: '#888', marginTop: 4 },
-  btnNova: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
-  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 10, marginBottom: 10, elevation: 3 },
-  label: { fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  value: { fontWeight: 'normal', color: '#555' },
-  empty: { textAlign: 'center', marginTop: 50, color: '#999', fontSize: 16 }
+  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 20 },
+  header: { marginBottom: 20, marginTop: 40 },
+  welcome: { fontSize: 24, fontWeight: 'bold', color: '#0047AB' },
+  cnpj: { fontSize: 16, color: '#6B7280', marginTop: 5 },
+  loader: { marginTop: 50 },
+  listContent: { paddingBottom: 100 },
+  card: { backgroundColor: '#FFFFFF', padding: 15, borderRadius: 10, marginBottom: 15, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  cardText: { fontSize: 14, color: '#6B7280', marginBottom: 2 },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 15, marginTop: 10 },
+  badgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: 'bold' },
+  emptyText: { textAlign: 'center', marginTop: 50, color: '#6B7280' },
+  fab: { backgroundColor: '#0047AB', padding: 15, borderRadius: 10, alignItems: 'center', position: 'absolute', bottom: 30, left: 20, right: 20 },
+  fabText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }
 });
