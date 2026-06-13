@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal, FlatList } from 'react-native';
 
-const API = 'http://192.168.15.9:3000/api';
+const API = 'https://strenuous-approve-cold.ngrok-free.dev/api';
 
 export default function CriarGarantiaScreen({ route, navigation }) {
   const { cnpj } = route.params;
