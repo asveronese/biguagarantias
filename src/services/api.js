@@ -38,6 +38,6 @@ export const api = {
   },
 
   getFotoUrl(id, numero) {
-    return `${BASE_URL}/api/garantias/${id}/foto/${numero}`;
+	return `${BASE_URL}/api/garantias/${id}/foto/${numero}`;
   },
 };
