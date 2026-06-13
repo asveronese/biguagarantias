@@ -1,74 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal, FlatList, ActivityIndicator } from 'react-native';
-import { BASE_URL } from '../services/api';
+import { api, BASE_URL } from '../services/api';
 
 export default function CriarGarantiaScreen({ route, navigation }) {
   const { cnpj } = route.params;
   const [listas, setListas] = useState({ Tipo: [], Defeito: [], Envio: [], Suporte: ['Sim', 'Não'] });
   const [produtoBusca, setProdutoBusca] = useState('');
   const [sugestoes, setSugestoes] = useState([]);
-  const [form, setForm] = useState({ codigo: '', produto: '', solicitante: '', fone: '', email: '', qte: '', tipo: '', defeito: '', envio: '', suporte: '', nfe: '', obs: '' });
+  const [sugerindo, setSugerindo] = useState(false);
+  const [form, setForm] = useState({ codigo: '', produto: '', solicitante: '', fone: '', email: '', qte: '1', tipo: '', defeito: '', envio: '', suporte: '', nfe: '', obs: '' });
   const [modal, setModal] = useState({ show: false, campo: '', opcoes: [] });
   const [loading, setLoading] = useState(false);
-  const [sugerindo, setSugerindo] = useState(false);
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/listas`)
-      .then(res => res.json())
-      .then(data => {
-        const normalizado = {};
-        Object.keys(data).forEach(key => {
-          normalizado[key.toLowerCase()] = data[key];
-        });
-        setListas(prev => ({ ...prev, ...data, ...normalizado }));
-      })
+      .then(r => r.json())
+      .then(d => setListas(prev => ({ ...prev, ...d })))
       .catch(() => Alert.alert('Erro', 'Falha ao carregar listas'));
   }, []);
 
-  const buscarProdutos = async (text) => {
-    setProdutoBusca(text);
-    setForm(prev => ({ ...prev, produto: text }));
-    if (text.length < 3) { setSugestoes([]); return; }
+  const buscarProdutos = async (texto) => {
+    setProdutoBusca(texto);
+    setForm(prev => ({ ...prev, produto: texto }));
+    if (texto.length < 3) { setSugestoes([]); return; }
     setSugerindo(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/produtos?busca=${text}`);
-      const data = await res.json();
-      setSugestoes(data || []);
-    } catch (e) { 
-      console.error(e); 
+      const r = await fetch(`${BASE_URL}/api/produtos?busca=${texto}`);
+      const d = await r.json();
+      setSugestoes(d || []);
+    } catch(e) {
+      console.error(e);
     } finally {
       setSugerindo(false);
     }
   };
 
   const abrirModal = (campo) => {
-    const opcoes = listas[campo] || listas[campo.toLowerCase()] || listas[campo.toUpperCase()] || [];
+    const opcoes = listas[campo] || [];
     setModal({ show: true, campo, opcoes });
   };
 
   const enviarGarantia = async () => {
     if (!form.produto || !form.tipo || !form.defeito) {
-      Alert.alert('Atenção', 'Preencha Produto, Tipo e Defeito');
-      return;
+      return Alert.alert('Atenção', 'Preencha Produto, Tipo e Defeito');
     }
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/garantias`, {
+      const payload = { ...form, cnpj };
+      const r = await fetch(`${BASE_URL}/api/garantias`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, cnpj })
+        body: JSON.stringify(payload),
       });
-      const data = await response.json();
-      if (response.ok) {
+      const data = await r.json();
+      if (r.ok) {
         Alert.alert('Sucesso', `Garantia criada! Protocolo: ${data.protocolo}`);
         navigation.goBack();
       } else {
-        Alert.alert('Erro', data.error || 'Erro ao criar garantia');
+        Alert.alert('Erro', data.error || 'Erro ao criar');
       }
-    } catch (e) { 
-      Alert.alert('Erro', 'Falha na conexão'); 
+    } catch(e) {
+      Alert.alert('Erro', 'Falha na conexão');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const renderCampoSelect = (label, campo) => (
@@ -104,7 +99,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
       {sugestoes.length > 0 && (
         <View style={styles.sugestoesContainer}>
           {sugestoes.map((item, i) => {
-            const descricao = item.DESCRICAO || item.descricao || item.NOME || item.nome || item.PRODUTO || item.produto || '';
+            const descricao = item.DESCRICAO || item.descricao || item.PRODUTO || item.produto || item.NOME || item.nome || '';
             return (
               <TouchableOpacity key={i} style={styles.sugestaoItem} onPress={() => {
                 setForm({...form, produto: descricao});
@@ -145,8 +140,8 @@ export default function CriarGarantiaScreen({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Selecione {modal.campo}</Text>
-            <FlatList 
-              data={modal.opcoes} 
+            <FlatList
+              data={modal.opcoes}
               keyExtractor={(item, i) => i.toString()}
               renderItem={({item}) => (
                 <TouchableOpacity style={styles.modalItem} onPress={() => {
@@ -155,14 +150,15 @@ export default function CriarGarantiaScreen({ route, navigation }) {
                 }}>
                   <Text style={styles.modalItemText}>{item}</Text>
                 </TouchableOpacity>
-              )} 
+              )}
             />
             <TouchableOpacity style={styles.modalClose} onPress={() => setModal({...modal, show: false})}>
-              <Text style={styles.modalCloseText}>Cancelar</Text>
+              <Text style={styles.modalCloseText}>Fechar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
