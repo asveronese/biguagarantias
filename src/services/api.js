@@ -5,7 +5,6 @@ const getBaseURL = () => {
 };
 
 const BASE_URL = getBaseURL();
-
 export { BASE_URL };
 
 export const api = {
