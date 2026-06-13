@@ -180,7 +180,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: '#fff' },
   label: { fontWeight: 'bold', marginTop: 15, marginBottom: 5, color: '#333' },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 12, backgroundColor: '#f9f9f9', fontSize: 15 },
   sugestao: { padding: 12, backgroundColor: '#f0f0f0', borderBottomWidth: 1, borderColor: '#ddd' },
