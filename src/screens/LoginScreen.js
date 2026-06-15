@@ -5,8 +5,8 @@ import { api } from '../services/api';
 const logo = require('../assets/logo.png');
 
 export default function LoginScreen({ navigation }) {
-  const [cnpj, setCnpj] = useState('50539279000154');
-  const [senha, setSenha] = useState('garantia');
+  const [cnpj, setCnpj] = useState('');
+  const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
