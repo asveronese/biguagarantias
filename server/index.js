@@ -43,27 +43,16 @@ app.post('/api/login', async (req, res) => {
   const { cnpj, senha } = req.body;
   try {
     const cnpjLimpo = (cnpj || '').replace(/[^\d]/g, '');
-    if (senha === 'garantia') {
-      const rows = await executeQuery(
-        `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
-         WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ?`,
-        [cnpjLimpo]
-      );
-      if (rows.length > 0) {
-        return res.json({ success: true, nome: rows[0].NOME, cnpj, codigo: rows[0].CODIGO });
-      }
-      return res.json({ success: true, nome: 'Usuário', cnpj, codigo: 1 });
-    } else {
-      const rows = await executeQuery(
-        `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
-         WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ? AND SENHA = ?`,
-        [cnpjLimpo, senha]
-      );
-      if (rows.length > 0) {
-        return res.json({ success: true, nome: rows[0].NOME, cnpj, codigo: rows[0].CODIGO });
-      }
-      return res.json({ success: false });
+    const rows = await executeQuery(
+      `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
+       WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ?
+       AND ESP_SENHA_APP = ?`,
+      [cnpjLimpo, senha]
+    );
+    if (rows.length > 0) {
+      return res.json({ success: true, nome: rows[0].NOME, cnpj, codigo: rows[0].CODIGO });
     }
+    return res.json({ success: false });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -71,7 +60,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/garantias', async (req, res) => {
   try {
     const rows = await executeQuery(
-	  `SELECT g.ID, g.PROTOCOLO, g.PRODUTO, p.DESCRICAO, g.TIPO, g.DEFEITO, g.STATUS, g.DATA_ABERTURA
+      `SELECT g.ID, g.PROTOCOLO, g.PRODUTO, p.DESCRICAO, g.TIPO, g.DEFEITO, g.STATUS, g.DATA_ABERTURA
        FROM GARANTIAS_APP g
        LEFT JOIN CEPRODUTOS p ON g.PRODUTO = p.PRODUTO
        WHERE g.CNPJ = ?
@@ -102,10 +91,10 @@ app.post('/api/garantias', async (req, res) => {
 app.get('/api/produtos', async (req, res) => {
   try {
     const busca = '%' + (req.query.busca || '') + '%';
-        const rows = await executeQuery(
-          'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE UPPER(DESCRICAO) LIKE UPPER(?) OR PRODUTO LIKE ? ORDER BY DESCRICAO',
-          [busca, busca]
-        );
+    const rows = await executeQuery(
+      'SELECT PRODUTO, DESCRICAO FROM CEPRODUTOS WHERE UPPER(DESCRICAO) LIKE UPPER(?) OR PRODUTO LIKE ? ORDER BY DESCRICAO',
+      [busca, busca]
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
