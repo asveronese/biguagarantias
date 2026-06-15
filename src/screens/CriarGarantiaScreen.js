@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal, FlatList } from 'react-native';
-const API = 'https://strenuous-approve-cold.ngrok-free.dev/api';
+import { BASE_URL } from '../services/api';
+const API = BASE_URL + '/api';
+
 export default function CriarGarantiaScreen({ route, navigation }) {
 const { cnpj, codigo } = route.params;
 const [listas, setListas] = useState({ Tipo: [], Defeito: [], Envio: [], Suporte: [] });
