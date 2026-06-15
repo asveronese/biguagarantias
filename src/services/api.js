@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 const getBaseURL = () => {
   //return 'http://192.168.15.9:3000';
-  return 'http://179.127.59.80:3000';
+	return 'http://vendas.biguasom.com.br/garantias';
 };
 
 const BASE_URL = getBaseURL();
