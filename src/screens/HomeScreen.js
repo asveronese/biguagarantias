@@ -2,10 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
+
 export default function HomeScreen({ route, navigation }) {
   const { nome, cnpj, codigo } = route.params || {};
   const [garantias, setGarantias] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const fetchGarantias = useCallback(async () => {
     try {
       setLoading(true);
@@ -17,11 +19,13 @@ export default function HomeScreen({ route, navigation }) {
       setLoading(false);
     }
   }, [cnpj]);
+
   useFocusEffect(
     useCallback(() => {
       fetchGarantias();
     }, [fetchGarantias])
   );
+
   const formatarData = (data) => {
     if (!data) return '';
     const d = new Date(data);
@@ -30,6 +34,7 @@ export default function HomeScreen({ route, navigation }) {
     const ano = d.getFullYear();
     return `${dia}/${mes}/${ano}`;
   };
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'pendente': return '#FF8C00';
@@ -37,6 +42,7 @@ export default function HomeScreen({ route, navigation }) {
       default: return '#6B7280';
     }
   };
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -54,9 +60,20 @@ export default function HomeScreen({ route, navigation }) {
         <Text style={styles.cardLabel}>Defeito:</Text>
         <Text style={styles.cardValue}>{item.DEFEITO}</Text>
       </View>
-      <Text style={styles.cardDate}>📅 {formatarData(item.DATA_ABERTURA)}</Text>
+      <View style={styles.cardFooter}>
+        <Text style={styles.cardDate}>📅 {formatarData(item.DATA_ABERTURA)}</Text>
+        {item.STATUS?.toLowerCase() === 'pendente' && (
+          <TouchableOpacity
+            style={styles.btnEditar}
+            onPress={() => navigation.navigate('CriarGarantia', { cnpj, codigo, garantia: item })}
+          >
+            <Text style={styles.btnEditarText}>✏️ Editar</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -89,6 +106,7 @@ export default function HomeScreen({ route, navigation }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA', padding: 20 },
   btnVoltar: {
@@ -122,5 +140,8 @@ const styles = StyleSheet.create({
   badgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: 'bold' },
   emptyText: { textAlign: 'center', marginTop: 50, color: '#6B7280' },
   fab: { backgroundColor: '#0047AB', padding: 15, borderRadius: 10, alignItems: 'center', position: 'absolute', bottom: 30, left: 20, right: 20 },
-  fabText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }
+  fabText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  btnEditar: { backgroundColor: '#0047AB', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 },
+  btnEditarText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 }
 });

@@ -5,10 +5,17 @@ const Firebird = require('node-firebird');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
 const app = express();
+
+const formataCNPJ = (v) => {
+  const n = (v || "").replace(/\D/g, "");
+  return n.length === 14 ? n.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5") : v;
+};
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 const dbOptions = {
   host: process.env.DB_HOST || '192.168.1.3',
   port: parseInt(process.env.DB_PORT || '3050'),
@@ -16,29 +23,59 @@ const dbOptions = {
   user: process.env.DB_USER || 'SYSDBA',
   password: process.env.DB_PASSWORD || 'EPROM0304'
 };
+
+const readBlob = (blob) => {
+  return new Promise((resolve) => {
+    if (typeof blob !== 'function') {
+      return resolve(blob);
+    }
+    blob((err, name, stream) => {
+      if (err) return resolve(null);
+      const chunks = [];
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+      stream.on('error', () => resolve(null));
+    });
+  });
+};
+
 const executeQuery = (query, params = []) => {
   return new Promise((resolve, reject) => {
     Firebird.attach(dbOptions, (err, db) => {
       if (err) return reject(err);
-      db.query(query, params, (err, result) => {
-        db.detach();
-        if (err) return reject(err);
-        resolve(result);
+      db.query(query, params, async (err, result) => {
+        if (err) {
+          db.detach();
+          return reject(err);
+        }
+        if (Array.isArray(result)) {
+          try {
+            for (let row of result) {
+              for (let key in row) {
+                if (typeof row[key] === 'function') {
+                  row[key] = await readBlob(row[key]);
+                }
+              }
+            }
+            db.detach();
+            resolve(result);
+          } catch (e) {
+            db.detach();
+            reject(e);
+          }
+        } else {
+          db.detach();
+          resolve(result);
+        }
       });
     });
   });
 };
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = 'uploads/';
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${req.body.protocolo}_${Date.now()}_${file.originalname}`);
-  }
-});
-const upload = multer({ storage });
+
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.post('/api/login', async (req, res) => {
   const { cnpj, senha } = req.body;
   try {
@@ -57,6 +94,7 @@ app.post('/api/login', async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
 app.get('/api/garantias', async (req, res) => {
   try {
     const rows = await executeQuery(
@@ -65,13 +103,14 @@ app.get('/api/garantias', async (req, res) => {
        LEFT JOIN CEPRODUTOS p ON g.PRODUTO = p.PRODUTO
        WHERE g.CNPJ = ?
        ORDER BY g.ID DESC`,
-      [req.query.cnpj]
+      [formataCNPJ(req.query.cnpj)]
     );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.post('/api/garantias', async (req, res) => {
   try {
     const idRes = await executeQuery('SELECT MAX(ID) as MAXID FROM GARANTIAS_APP');
@@ -81,13 +120,144 @@ app.post('/api/garantias', async (req, res) => {
     await executeQuery(
       `INSERT INTO GARANTIAS_APP (ID, CNPJ, CODIGO, SOLICITANTE, FONE, EMAIL, QTE, PRODUTO, TIPO, DEFEITO, OBS, SUPORTE, PROTOCOLO, NFE, ENVIO, STATUS, DATA_ABERTURA, DATA_ATUALIZACAO)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [newId, cnpj, codigo, solicitante, fone, email, qte, produto, tipo, defeito, obs, suporte, protocolo, nfe, envio, 'Pendente', new Date(), new Date()]
+      [newId, formataCNPJ(cnpj), codigo, solicitante, fone, email, qte, produto, tipo, defeito, obs, suporte, protocolo, nfe, envio, 'Pendente', new Date(), new Date()]
     );
     res.json({ success: true, protocolo });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.post('/api/garantias/fotos', upload.array('fotos', 5), async (req, res) => {
+  try {
+    const idRes = await executeQuery('SELECT MAX(ID) as MAXID FROM GARANTIAS_APP');
+    const newId = (idRes[0].MAXID || 0) + 1;
+    const protocolo = 'G-' + Date.now();
+    const { cnpj, codigo, solicitante, fone, email, qte, produto, tipo, defeito, obs, suporte, nfe, envio } = req.body;
+    const img1 = req.files && req.files[0] ? req.files[0].buffer : null;
+    const img2 = req.files && req.files[1] ? req.files[1].buffer : null;
+    const img3 = req.files && req.files[2] ? req.files[2].buffer : null;
+    const img4 = req.files && req.files[3] ? req.files[3].buffer : null;
+    const img5 = req.files && req.files[4] ? req.files[4].buffer : null;
+    await executeQuery(
+      `INSERT INTO GARANTIAS_APP (ID, CNPJ, CODIGO, SOLICITANTE, FONE, EMAIL, QTE, PRODUTO, TIPO, DEFEITO, OBS, SUPORTE, PROTOCOLO, NFE, ENVIO, STATUS, DATA_ABERTURA, DATA_ATUALIZACAO, IMAGEM1, IMAGEM2, IMAGEM3, IMAGEM4, IMAGEM5)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [newId, formataCNPJ(cnpj), codigo, solicitante, fone, email, qte || 1, produto, tipo, defeito, obs, suporte, protocolo, nfe, envio, 'Pendente', new Date(), new Date(), img1, img2, img3, img4, img5]
+    );
+    res.json({ success: true, protocolo });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/garantias/:id', async (req, res) => {
+  try {
+    const rows = await executeQuery(
+      `SELECT g.*, p.DESCRICAO as PRODUTO_DESCRICAO
+       FROM GARANTIAS_APP g
+       LEFT JOIN CEPRODUTOS p ON g.PRODUTO = p.PRODUTO
+       WHERE g.ID = ?`,
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Garantia não encontrada' });
+    }
+    const item = rows[0];
+    const fotos = [];
+    if (item.IMAGEM1) fotos.push(`data:image/jpeg;base64,${item.IMAGEM1.toString('base64')}`);
+    if (item.IMAGEM2) fotos.push(`data:image/jpeg;base64,${item.IMAGEM2.toString('base64')}`);
+    if (item.IMAGEM3) fotos.push(`data:image/jpeg;base64,${item.IMAGEM3.toString('base64')}`);
+    if (item.IMAGEM4) fotos.push(`data:image/jpeg;base64,${item.IMAGEM4.toString('base64')}`);
+    if (item.IMAGEM5) fotos.push(`data:image/jpeg;base64,${item.IMAGEM5.toString('base64')}`);
+
+    res.json({
+      id: item.ID,
+      cnpj: item.CNPJ,
+      codigo: item.CODIGO,
+      solicitante: item.SOLICITANTE,
+      fone: item.FONE,
+      email: item.EMAIL,
+      qte: item.QTE,
+      produto: item.PRODUTO,
+      produtoDescricao: item.PRODUTO_DESCRICAO,
+      tipo: item.TIPO,
+      defeito: item.DEFEITO,
+      obs: item.OBS,
+      suporte: item.SUPORTE,
+      protocolo: item.PROTOCOLO,
+      nfe: item.NFE,
+      envio: item.ENVIO,
+      status: item.STATUS,
+      fotos
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/garantias/:id', upload.array('fotos', 5), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { produto, tipo, defeito, envio, suporte, nfe, obs, solicitante, fone, email } = req.body;
+
+    const current = await executeQuery('SELECT IMAGEM1, IMAGEM2, IMAGEM3, IMAGEM4, IMAGEM5, STATUS FROM GARANTIAS_APP WHERE ID = ?', [id]);
+    if (current.length === 0) {
+      return res.status(404).json({ success: false, error: 'Garantia não encontrada' });
+    }
+
+    if (current[0].STATUS?.toLowerCase() !== 'pendente') {
+      return res.status(400).json({ success: false, error: 'Apenas garantias com status Pendente podem ser alteradas' });
+    }
+
+    const currentImages = [
+      current[0].IMAGEM1,
+      current[0].IMAGEM2,
+      current[0].IMAGEM3,
+      current[0].IMAGEM4,
+      current[0].IMAGEM5
+    ];
+
+    const finalImages = [null, null, null, null, null];
+    let fileIndex = 0;
+
+    for (let i = 0; i < 5; i++) {
+      const status = req.body[`foto_status_${i}`];
+      if (status === 'manter' || status === 'existente') {
+        finalImages[i] = currentImages[i];
+      } else if (status === 'remover') {
+        finalImages[i] = null;
+      } else if (status === 'novo') {
+        if (req.files && req.files[fileIndex]) {
+          finalImages[i] = req.files[fileIndex].buffer;
+          fileIndex++;
+        } else {
+          finalImages[i] = null;
+        }
+      } else {
+        finalImages[i] = null;
+      }
+    }
+
+    await executeQuery(
+      `UPDATE GARANTIAS_APP SET 
+        PRODUTO = ?, TIPO = ?, DEFEITO = ?, ENVIO = ?, SUPORTE = ?, NFE = ?, OBS = ?, 
+        SOLICITANTE = ?, FONE = ?, EMAIL = ?, DATA_ATUALIZACAO = ?,
+        IMAGEM1 = ?, IMAGEM2 = ?, IMAGEM3 = ?, IMAGEM4 = ?, IMAGEM5 = ?
+       WHERE ID = ?`,
+      [
+        produto, tipo, defeito, envio || '', suporte || '', nfe || '', obs || '',
+        solicitante || '', fone || '', email || '', new Date(),
+        finalImages[0], finalImages[1], finalImages[2], finalImages[3], finalImages[4],
+        id
+      ]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/produtos', async (req, res) => {
   try {
     const busca = '%' + (req.query.busca || '') + '%';
@@ -100,6 +270,7 @@ app.get('/api/produtos', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.get('/api/listas', (req, res) => {
   res.json({
     Tipo: ['Devolução de Novo', 'Devolução com Defeito', 'Remessa de Garantia'],
@@ -120,6 +291,7 @@ app.get('/api/listas', (req, res) => {
     Suporte: ['Sim', 'Não']
   });
 });
+
 app.get('/api/nfs/:codigo/:produto', async (req, res) => {
   try {
     const sql = `select filial||'-'||serie||'-'||documento as nfe,
@@ -131,8 +303,5 @@ app.get('/api/nfs/:codigo/:produto', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-app.post('/api/upload', upload.single('imagem'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, error: 'Nenhuma imagem enviada' });
-  res.json({ success: true, caminho: req.file.path });
-});
+
 app.listen(3000, () => console.log('Server running on port 3000'));

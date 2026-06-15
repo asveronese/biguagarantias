@@ -25,7 +25,7 @@ export const api = {
   },
 
   async listarGarantias(cnpj = null) {
-    const cnpjLimpo = cnpj ? cnpj.replace(/\D/g, '') : '';
+    const cnpjLimpo = cnpj;
     const url = BASE_URL + '/api/garantias?cnpj=' + cnpjLimpo;
     const response = await fetch(url);
     return response.json();
