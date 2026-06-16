@@ -37,16 +37,20 @@ export default function LoginScreen({ navigation }) {
       </View>
       <View style={styles.formContainer}>
         <Text style={styles.title}>Login</Text>
+        <Text style={styles.label}>CNPJ</Text>
         <TextInput
           style={styles.input}
           placeholder="CNPJ"
+          placeholderTextColor="#999"
           value={cnpj}
           onChangeText={setCnpj}
           keyboardType="numeric"
         />
+        <Text style={styles.label}>Senha</Text>
         <TextInput
           style={styles.input}
           placeholder="Senha"
+          placeholderTextColor="#999"
           value={senha}
           onChangeText={setSenha}
           secureTextEntry
@@ -94,6 +98,13 @@ const styles = StyleSheet.create({
     color: '#0047AB',
     textAlign: 'center',
     marginBottom: 30,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+    marginLeft: 2,
   },
   input: {
     borderWidth: 1,
