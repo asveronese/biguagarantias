@@ -20,10 +20,25 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.asveronese.biguagarantias"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2f61fabc-878e-4003-9b5c-405f854e61b4"
+      }
+    },
+    "plugins": [
+      {
+        "expo-build-properties": {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      }
+    ]
   }
 }
