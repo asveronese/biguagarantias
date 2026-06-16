@@ -108,7 +108,7 @@ export default function HomeScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 20 },
+  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 20, paddingBottom: 30 },
   btnVoltar: {
     marginTop: 50,
     paddingVertical: 10,
@@ -127,7 +127,8 @@ const styles = StyleSheet.create({
   welcome: { fontSize: 24, fontWeight: 'bold', color: '#0047AB' },
   cnpj: { fontSize: 14, color: '#6B7280', marginTop: 5 },
   loader: { marginTop: 50 },
-  listContent: { paddingBottom: 100 },
+  listContent: {
+    paddingBottom: 100, paddingBottom: 100 },
   card: { backgroundColor: '#FFFFFF', padding: 15, borderRadius: 10, marginBottom: 15, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   cardId: { fontSize: 16, fontWeight: 'bold', color: '#0047AB' },

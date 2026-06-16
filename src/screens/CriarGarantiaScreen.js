@@ -206,7 +206,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
       <TouchableOpacity style={styles.btnVoltar} onPress={() => navigation.goBack()}>
         <Text style={styles.btnVoltarText}>← Voltar</Text>
       </TouchableOpacity>

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { api } from '../services/api';
-
 const logo = require('../assets/logo.png');
-
 export default function LoginScreen({ navigation }) {
   const [cnpj, setCnpj] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleLogin = async () => {
     if (!cnpj || !senha) {
       Alert.alert('Erro', 'Preencha CNPJ e senha');
@@ -28,7 +25,6 @@ export default function LoginScreen({ navigation }) {
       setLoading(false);
     }
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -40,7 +36,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.label}>CNPJ</Text>
         <TextInput
           style={styles.input}
-          placeholder="CNPJ"
+          placeholder="Digite o CNPJ"
           placeholderTextColor="#999"
           value={cnpj}
           onChangeText={setCnpj}
@@ -49,7 +45,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.label}>Senha</Text>
         <TextInput
           style={styles.input}
-          placeholder="Senha"
+          placeholder="Digite a senha"
           placeholderTextColor="#999"
           value={senha}
           onChangeText={setSenha}
@@ -66,7 +62,6 @@ export default function LoginScreen({ navigation }) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA' },
   topBar: {
