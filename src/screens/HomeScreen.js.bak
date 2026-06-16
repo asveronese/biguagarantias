@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
 
@@ -35,29 +35,7 @@ export default function HomeScreen({ route, navigation }) {
     return `${dia}/${mes}/${ano}`;
   };
 
-    const handleExcluir = (id) => {
-    Alert.alert(
-      'Confirmar exclusão',
-      'Tem certeza que deseja excluir esta garantia?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.excluirGarantia(id);
-              fetchGarantias();
-            } catch (error) {
-              Alert.alert('Erro', error.message);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-const getStatusColor = (status) => {
+  const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'pendente': return '#FF8C00';
       case 'concluído': return '#16A34A';
@@ -85,20 +63,12 @@ const getStatusColor = (status) => {
       <View style={styles.cardFooter}>
         <Text style={styles.cardDate}>📅 {formatarData(item.DATA_ABERTURA)}</Text>
         {item.STATUS?.toLowerCase() === 'pendente' && (
-          <>
-            <TouchableOpacity
-              style={styles.btnEditar}
-              onPress={() => navigation.navigate('CriarGarantia', { cnpj, codigo, garantia: item })}
-            >
-              <Text style={styles.btnEditarText}>✏️ Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btnEditar, { backgroundColor: '#dc3545', marginLeft: 8 }]}
-              onPress={() => handleExcluir(item.ID)}
-            >
-              <Text style={styles.btnEditarText}>🗑️ Excluir</Text>
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity
+            style={styles.btnEditar}
+            onPress={() => navigation.navigate('CriarGarantia', { cnpj, codigo, garantia: item })}
+          >
+            <Text style={styles.btnEditarText}>✏️ Editar</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>

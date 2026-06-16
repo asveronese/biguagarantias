@@ -304,20 +304,4 @@ app.get('/api/nfs/:codigo/:produto', async (req, res) => {
   }
 });
 
-app.delete('/api/garantias/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const statusAtual = await executeQuery('SELECT STATUS FROM GARANTIAS_APP WHERE ID = ?', [id]);
-    if (statusAtual.length === 0) {
-      return res.status(404).json({ success: false, error: 'Garantia não encontrada' });
-    }
-    if (statusAtual[0].STATUS?.toLowerCase() !== 'pendente') {
-      return res.status(400).json({ success: false, error: 'Apenas garantias com status Pendente podem ser excluídas' });
-    }
-    await executeQuery('DELETE FROM GARANTIAS_APP WHERE ID = ?', [id]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 app.listen(3000, () => console.log('Server running on port 3000'));

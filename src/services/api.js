@@ -42,5 +42,11 @@ export const api = {
 
   getFotoUrl(id, numero) {
     return BASE_URL + '/api/garantias/' + id + '/foto/' + numero;
-  }
+  },
+  async excluirGarantia(id) {
+    const response = await fetch(BASE_URL + '/api/garantias/' + id, {
+      method: 'DELETE',
+    });
+    return handleResponse(response);
+  },
 };
