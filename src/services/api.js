@@ -7,11 +7,17 @@ const getBaseURL = () => {
 export const BASE_URL = getBaseURL();
 
 const handleResponse = async (response) => {
-  const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || 'Erro ao realizar a operação');
+    let errorMsg = 'Erro ao realizar a operação';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorMsg;
+    } catch (e) {
+      errorMsg = `Erro do servidor (${response.status})`;
+    }
+    throw new Error(errorMsg);
   }
-  return data;
+  return response.json();
 };
 
 export const api = {
