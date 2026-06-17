@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../services/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen({ route, navigation }) {
   const { nome, cnpj, codigo } = route.params || {};
@@ -128,7 +129,7 @@ const getStatusColor = (status) => {
         />
       )}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, {bottom: 30 + insets.bottom}]}
         onPress={() => navigation.navigate('CriarGarantia', { cnpj, codigo })}
       >
         <Text style={styles.fabText}>Nova Garantia</Text>

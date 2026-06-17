@@ -160,7 +160,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
       });
       const data = await r.json();
       if (data.success) {
-        Alert.alert('Sucesso', isEdit ? 'Garantia atualizada!' : 'Garantia criada com fotos!');
+        Alert.alert('Sucesso', isEdit ? 'Garantia atualizada!' : 'Garantia criada!');
         navigation.navigate("Home", { cnpj, codigo });
       } else {
         Alert.alert('Erro', data.error || 'Falha ao salvar');
