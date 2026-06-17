@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen({ route, navigation }) {
   const { nome, cnpj, codigo } = route.params || {};
+   const insets = useSafeAreaInsets();
   const [garantias, setGarantias] = useState([]);
   const [loading, setLoading] = useState(true);
 
