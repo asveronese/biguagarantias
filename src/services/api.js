@@ -55,4 +55,34 @@ export const api = {
     });
     return handleResponse(response);
   },
+
+  async trocarSenha(cnpj, senhaAtual, novaSenha) {
+    const response = await fetch(BASE_URL + '/api/trocar-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cnpj, senhaAtual, novaSenha }),
+    });
+    return handleResponse(response);
+  },
+
+
+  async trocarSenha(cnpj, senhaAtual, novaSenha) {
+    const response = await fetch(BASE_URL + '/api/trocar-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cnpj, senhaAtual, novaSenha }),
+    });
+    return handleResponse(response);
+  },
+
+
+  async trocarSenha(cnpj, senhaAtual, novaSenha) {
+    const response = await fetch(BASE_URL + '/api/trocar-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cnpj, senhaAtual, novaSenha }),
+    });
+    return handleResponse(response);
+  },
+
 };

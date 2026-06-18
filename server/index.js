@@ -320,4 +320,29 @@ app.delete('/api/garantias/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.post('/api/trocar-senha', async (req, res) => {
+  const { cnpj, senhaAtual, novaSenha } = req.body;
+  try {
+    const cnpjLimpo = (cnpj || '').replace(/[^\d]/g, '');
+    const rows = await executeQuery(
+      `SELECT NOME, NUM_DOCTO1, CODIGO FROM CADASTRO
+       WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ?
+       AND ESP_SENHA_APP = ?`,
+      [cnpjLimpo, senhaAtual]
+    );
+    if (rows.length === 0) {
+      return res.json({ success: false, error: 'Senha atual incorreta' });
+    }
+    await executeQuery(
+      `UPDATE CADASTRO SET ESP_SENHA_APP = ?
+       WHERE REPLACE(REPLACE(REPLACE(REPLACE(NUM_DOCTO1, '.', ''), '/', ''), '-', ''), ' ', '') = ?`,
+      [novaSenha, cnpjLimpo]
+    );
+    return res.json({ success: true, message: 'Senha alterada com sucesso' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(3000, () => console.log('Server running on port 3000'));

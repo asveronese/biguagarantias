@@ -1,0 +1,144 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, ScrollView, Image, Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../services/api';
+
+export default function CriarGarantiaScreen({ route, navigation }) {
+  const { garantia, user } = route.params || {};
+  const isEdit = !!garantia;
+
+  const [produto, setProduto] = useState(garantia?.PRODUTO || '');
+  const [defeito, setDefeito] = useState(garantia?.DEFEITO || '');
+  const [nfe, setNfe] = useState(garantia?.NFE || '');
+  const [envio, setEnvio] = useState(garantia?.ENVIO || '');
+  const [suporte, setSuporte] = useState(garantia?.SUPORTE || '');
+  const [protocolo, setProtocolo] = useState(garantia?.PROTOCOLO || '');
+  const [fotos, setFotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [cnpj, setCnpj] = useState('');
+  const [codigo, setCodigo] = useState('');
+
+  useEffect(() => {
+    ImagePicker.requestCameraPermissionsAsync();
+    ImagePicker.requestMediaLibraryPermissionsAsync();
+    AsyncStorage.getItem('@userLogado').then(saved => {
+      if (saved) {
+        const u = JSON.parse(saved);
+        setCnpj(u.cnpj || '');
+        setCodigo(u.codigo || '');
+      }
+    });
+  }, []);
+
+  const adicionarFoto = async (tipo) => {
+    try {
+      const options = { mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.6, allowsEditing: true };
+      const result = tipo === 'camera'
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (!result.canceled && result.assets[0]) {
+        setFotos(prev => [...prev, { uri: result.assets[0].uri, status: 'novo' }]);
+      }
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível acessar a câmera/galeria');
+    }
+  };
+
+  const selecionarFoto = () => {
+    Alert.alert('Adicionar Foto', 'Escolha:', [
+      { text: 'Câmera', onPress: () => adicionarFoto('camera') },
+      { text: 'Galeria', onPress: () => adicionarFoto('galeria') },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  };
+
+  const removerFoto = (index) => setFotos(prev => prev.filter((_, i) => i !== index));
+
+  const handleSalvar = async () => {
+    if (!nfe.trim()) { Alert.alert('Atenção', 'Informe a NF'); return; }
+    if (!produto.trim()) { Alert.alert('Atenção', 'Informe o produto'); return; }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('cnpj', cnpj);
+      formData.append('codigo', codigo);
+      formData.append('produto', produto);
+      formData.append('defeito', defeito);
+      formData.append('nfe', nfe);
+      formData.append('envio', envio);
+      formData.append('suporte', suporte);
+      formData.append('protocolo', protocolo);
+      fotos.forEach((foto, i) => {
+        formData.append('foto_status_' + i, foto.status);
+        if (foto.status === 'novo' && foto.uri) {
+          const filename = foto.uri.split('/').pop() || 'foto_' + i + '.jpg';
+          formData.append('fotos', { uri: Platform.OS === 'android' ? foto.uri : foto.uri.replace('file://', ''), type: 'image/jpeg', name: filename });
+        }
+      });
+      const url = isEdit ? BASE_URL + '/api/garantias/' + garantia.ID : BASE_URL + '/api/garantias/fotos';
+      const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', body: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+      const data = await res.json();
+      if (data.success) {
+        Alert.alert('Sucesso', isEdit ? 'Garantia atualizada!' : 'Garantia criada!');
+        navigation.navigate('Home', { cnpj, codigo });
+      } else {
+        Alert.alert('Erro', data.error || 'Falha ao salvar');
+      }
+    } catch (e) {
+      Alert.alert('Erro', 'Falha ao conectar: ' + e.message);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>{isEdit ? 'Editar Garantia' : 'Nova Garantia'}</Text>
+      <Text style={styles.label}>Produto *</Text>
+      <TextInput style={styles.input} value={produto} onChangeText={setProduto} placeholder="Nome do produto" />
+      <Text style={styles.label}>Defeito relatado</Text>
+      <TextInput style={[styles.input, styles.textArea]} value={defeito} onChangeText={setDefeito} placeholder="Descreva o defeito" multiline numberOfLines={3} />
+      <Text style={styles.label}>NF * (obrigatório)</Text>
+      <TextInput style={styles.input} value={nfe} onChangeText={setNfe} placeholder="Número da nota fiscal" />
+      <Text style={styles.label}>Forma de envio</Text>
+      <TextInput style={styles.input} value={envio} onChangeText={setEnvio} placeholder="Ex: Transportadora, Correio, Pessoalmente" />
+      <Text style={styles.label}>Falou com o Suporte</Text>
+      <TextInput style={styles.input} value={suporte} onChangeText={setSuporte} placeholder="Sim / Não" />
+      <Text style={styles.label}>Protocolo</Text>
+      <TextInput style={styles.input} value={protocolo} onChangeText={setProtocolo} placeholder="Número do protocolo" />
+      <Text style={styles.label}>Fotos ({fotos.length})</Text>
+      <View style={styles.fotosContainer}>
+        {fotos.map((f, i) => (
+          <View key={i} style={styles.fotoWrapper}>
+            <Image source={{ uri: f.uri }} style={styles.fotoPreview} />
+            <TouchableOpacity style={styles.removeFoto} onPress={() => removerFoto(i)}><Text style={styles.removeText}>X</Text></TouchableOpacity>
+          </View>
+        ))}
+        {fotos.length < 5 && (
+          <TouchableOpacity style={styles.addFoto} onPress={selecionarFoto}><Text style={styles.addText}>+ Foto</Text></TouchableOpacity>
+        )}
+      </View>
+      <TouchableOpacity style={[styles.button, loading && styles.disabled]} onPress={handleSalvar} disabled={loading}>
+        {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>{isEdit ? 'Atualizar' : 'Salvar Garantia'}</Text>}
+      </TouchableOpacity>
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#1A1A2E', margin: 20 },
+  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginTop: 12, marginBottom: 4 },
+  input: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 12, fontSize: 15, color: '#333' },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  fotosContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
+  fotoWrapper: { marginRight: 10, marginBottom: 10, position: 'relative' },
+  fotoPreview: { width: 100, height: 100, borderRadius: 8, backgroundColor: '#ddd' },
+  removeFoto: { position: 'absolute', top: -8, right: -8, backgroundColor: '#e74c3c', borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  removeText: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
+  addFoto: { width: 100, height: 100, borderRadius: 8, borderWidth: 2, borderColor: '#0047AB', borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', backgroundColor: '#EEF2FF' },
+  addText: { fontSize: 14, color: '#0047AB', fontWeight: '600' },
+  button: { backgroundColor: '#0047AB', height: 50, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginTop: 24 },
+  disabled: { opacity: 0.6 },
+  buttonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+});

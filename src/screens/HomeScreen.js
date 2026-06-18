@@ -110,7 +110,7 @@ const getStatusColor = (status) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.btnVoltar}
-        onPress={() => navigation.navigate('Login')}
+        onPress={() => navigation.replace('Login', { autoLogin: false })}
       >
         <Text style={styles.btnVoltarText}>← Voltar ao Login</Text>
       </TouchableOpacity>
