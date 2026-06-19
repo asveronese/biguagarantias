@@ -284,12 +284,6 @@ export default function CriarGarantiaScreen({ route, navigation }) {
           {form.suporte || 'Selecione...'}
         </Text>
       </TouchableOpacity>
-      <Text style={styles.label}>NF-e</Text>
-      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('nfe')}>
-        <Text style={form.nfe ? styles.selectText : styles.selectPlaceholder}>
-          {form.nfe || 'Selecione a NF-e...'}
-        </Text>
-      </TouchableOpacity>
       <Text style={styles.label}>Protocolo</Text>
       <TextInput
         style={styles.input}
@@ -297,6 +291,12 @@ export default function CriarGarantiaScreen({ route, navigation }) {
         onChangeText={(t) => setForm({...form, protocolo: t})}
         placeholder="Digite o protocolo"
       />
+      <Text style={styles.label}>NF-e</Text>
+      <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('nfe')}>
+        <Text style={form.nfe ? styles.selectText : styles.selectPlaceholder}>
+          {form.nfe || 'Selecione a NF-e...'}
+        </Text>
+      </TouchableOpacity>
       {form.nfe ? <Text style={styles.selecionado}>NF-e: {form.nfe}</Text> : null}
       <Text style={styles.label}>Solicitante</Text>
       <TextInput
