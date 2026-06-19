@@ -247,13 +247,13 @@ export default function CriarGarantiaScreen({ route, navigation }) {
           {form.defeito || 'Selecione...'}
         </Text>
       </TouchableOpacity>
-      <Text style={styles.label}>Envio</Text>
+      <Text style={styles.label}>Forma de Envio</Text>
       <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('envio')}>
         <Text style={form.envio ? styles.selectText : styles.selectPlaceholder}>
           {form.envio || 'Selecione...'}
         </Text>
       </TouchableOpacity>
-      <Text style={styles.label}>Suporte</Text>
+      <Text style={styles.label}>Falou com o Suporte</Text>
       <TouchableOpacity style={styles.selectBtn} onPress={() => abrirModal('suporte')}>
         <Text style={form.suporte ? styles.selectText : styles.selectPlaceholder}>
           {form.suporte || 'Selecione...'}
