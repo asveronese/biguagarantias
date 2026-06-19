@@ -19,6 +19,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
     envio: '',
     suporte: '',
     nfe: '',
+    protocolo: '',
     obs: '',
     solicitante: '',
     fone: '',
@@ -50,6 +51,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
             envio: d.envio || '',
             suporte: d.suporte || '',
             nfe: d.nfe || '',
+            protocolo: d.protocolo || '',
             obs: d.obs || '',
             solicitante: d.solicitante || '',
             fone: d.fone || '',
@@ -118,8 +120,8 @@ export default function CriarGarantiaScreen({ route, navigation }) {
   };
 
   const salvar = async () => {
-    if (!form.produto || !form.tipo || !form.defeito) {
-      return Alert.alert('Erro', 'Preencha Produto, Tipo e Defeito');
+    if (!form.produto || !form.tipo || !form.defeito || !form.nfe) {
+      return Alert.alert('Erro', 'Preencha Produto, Tipo, Defeito e NF-e');
     }
     try {
       const formData = new FormData();
@@ -131,6 +133,7 @@ export default function CriarGarantiaScreen({ route, navigation }) {
       formData.append('envio', form.envio || '');
       formData.append('suporte', form.suporte || '');
       formData.append('nfe', form.nfe || '');
+      formData.append('protocolo', form.protocolo || '');
       formData.append('obs', form.obs || '');
       formData.append('qte', '1');
       formData.append('solicitante', form.solicitante || '');
@@ -262,13 +265,20 @@ export default function CriarGarantiaScreen({ route, navigation }) {
           {form.nfe || 'Selecione a NF-e...'}
         </Text>
       </TouchableOpacity>
+      <Text style={styles.label}>Protocolo</Text>
+      <TextInput
+        style={styles.input}
+        value={form.protocolo}
+        onChangeText={(t) => setForm({...form, protocolo: t})}
+        placeholder="Digite o protocolo"
+      />
       {form.nfe ? <Text style={styles.selecionado}>NF-e: {form.nfe}</Text> : null}
       <Text style={styles.label}>Solicitante</Text>
       <TextInput
         style={styles.input}
         value={form.solicitante}
         onChangeText={(t) => setForm({...form, solicitante: t})}
-        placeholder="Nome do solicitante"
+        placeholder="Digite seu nome"
       />
       <Text style={styles.label}>Telefone</Text>
       <TextInput
