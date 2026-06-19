@@ -97,16 +97,36 @@ export default function CriarGarantiaScreen({ route, navigation }) {
   };
 
   const selecionarFoto = async (index) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-      allowsMultipleSelection: false,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const newFotos = [...fotos];
-      newFotos[index] = { uri: result.assets[0].uri, status: 'novo' };
-      setFotos(newFotos);
-    }
+    Alert.alert(
+      'Selecionar Foto',
+      'Escolha a origem da foto:',
+      [
+        { text: 'Câmera', onPress: async () => {
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.7,
+          });
+          if (!result.canceled && result.assets && result.assets.length > 0) {
+            const newFotos = [...fotos];
+            newFotos[index] = { uri: result.assets[0].uri, status: 'novo' };
+            setFotos(newFotos);
+          }
+        }},
+        { text: 'Galeria', onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.7,
+            allowsMultipleSelection: false,
+          });
+          if (!result.canceled && result.assets && result.assets.length > 0) {
+            const newFotos = [...fotos];
+            newFotos[index] = { uri: result.assets[0].uri, status: 'novo' };
+            setFotos(newFotos);
+          }
+        }},
+        { text: 'Cancelar', style: 'cancel' },
+      ]
+    );
   };
 
   const removerFoto = (index) => {
