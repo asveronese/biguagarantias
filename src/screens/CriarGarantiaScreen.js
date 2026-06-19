@@ -102,6 +102,11 @@ export default function CriarGarantiaScreen({ route, navigation }) {
       'Escolha a origem da foto:',
       [
         { text: 'Câmera', onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para tirar fotos.');
+            return;
+          }
           const result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             quality: 0.7,
