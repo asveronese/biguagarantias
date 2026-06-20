@@ -17,11 +17,11 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 const dbOptions = {
-  host: process.env.DB_HOST || '192.168.1.3',
+  host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT || '3050'),
-  database: process.env.DB_NAME || 'BIGUA',
-  user: process.env.DB_USER || 'SYSDBA',
-  password: process.env.DB_PASSWORD || 'EPROM0304'
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 };
 
 const readBlob = (blob) => {
